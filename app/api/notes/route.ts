@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import connectDB from "@/lib/mongodb";
 import Note from "@/models/Note";
 
-// GET /api/notes — return all non-archived notes for the logged-in user
+// GET /api/notes — return notes for the logged-in user with filtering and sorting
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -15,15 +15,31 @@ export async function GET(req: Request) {
     await connectDB();
 
     const { searchParams } = new URL(req.url);
-    const includeArchived = searchParams.get("archived") === "true";
+    const search = searchParams.get("search") || "";
+    const tags = searchParams.get("tags")?.split(",").filter(Boolean) || [];
+    const sort = searchParams.get("sort") || "updatedAt"; // updatedAt or createdAt
+    const archived = searchParams.get("archived") === "true";
 
-    const query: Record<string, unknown> = { userId: session.user.id };
-    if (!includeArchived) {
-      query.isArchived = false;
+    const query: any = { userId: session.user.id };
+
+    // Archive filter
+    query.isArchived = archived;
+
+    // Search filter (title or content)
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { content: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // Multi-tag filter (using $all)
+    if (tags.length > 0) {
+      query.tags = { $all: tags };
     }
 
     const notes = await Note.find(query)
-      .sort({ updatedAt: -1 })
+      .sort({ [sort]: -1 })
       .select("title content tags category isArchived createdAt updatedAt")
       .lean();
 

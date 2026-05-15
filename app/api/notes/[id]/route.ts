@@ -45,7 +45,8 @@ export async function PATCH(req: Request, context: RouteContext) {
   }
 }
 
-// DELETE /api/notes/[id] — soft delete (set isArchived = true)
+// DELETE /api/notes/[id] — delete note
+// Optional ?permanent=true for hard delete, otherwise defaults to archiving
 export async function DELETE(req: Request, context: RouteContext) {
   try {
     const session = await getServerSession(authOptions);
@@ -54,19 +55,30 @@ export async function DELETE(req: Request, context: RouteContext) {
     }
 
     const { id } = await context.params;
+    const { searchParams } = new URL(req.url);
+    const permanent = searchParams.get("permanent") === "true";
+
     await connectDB();
 
-    const note = await Note.findOneAndUpdate(
-      { _id: id, userId: session.user.id },
-      { $set: { isArchived: true } },
-      { new: true }
-    ).lean();
+    if (permanent) {
+      const result = await Note.deleteOne({ _id: id, userId: session.user.id });
+      if (result.deletedCount === 0) {
+        return NextResponse.json({ error: "Note not found" }, { status: 404 });
+      }
+      return NextResponse.json({ message: "Note permanently deleted" });
+    } else {
+      const note = await Note.findOneAndUpdate(
+        { _id: id, userId: session.user.id },
+        { $set: { isArchived: true } },
+        { new: true }
+      ).lean();
 
-    if (!note) {
-      return NextResponse.json({ error: "Note not found" }, { status: 404 });
+      if (!note) {
+        return NextResponse.json({ error: "Note not found" }, { status: 404 });
+      }
+
+      return NextResponse.json({ message: "Note archived", note });
     }
-
-    return NextResponse.json({ message: "Note archived", note });
   } catch (error) {
     console.error("[DELETE /api/notes/[id]]", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
