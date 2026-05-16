@@ -15,6 +15,8 @@ interface AiPanelProps {
   initialActionItems?: string[];
   initialSuggestedTitle?: string;
   onApplyTitle: (title: string) => void;
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
 }
 
 async function generateSummary(id: string) {
@@ -34,9 +36,10 @@ export function AiPanel({
   initialActionItems,
   initialSuggestedTitle,
   onApplyTitle,
+  isOpen,
+  setIsOpen,
 }: AiPanelProps) {
   const queryClient = useQueryClient();
-  const [isOpen, setIsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [summary, setSummary] = useState(initialSummary || "");

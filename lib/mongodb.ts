@@ -38,8 +38,9 @@ async function connectDB() {
 
   try {
     cached.conn = await cached.promise;
-  } catch (e) {
+  } catch (err) {
     cached.promise = null;
+    const e = err as Error;
     console.error("❌ MongoDB Connection Error:", e.message);
     
     if (e.message.includes("SSL alert number 80")) {

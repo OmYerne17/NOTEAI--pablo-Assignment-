@@ -4,9 +4,11 @@ import { authOptions } from "@/lib/auth";
 import connectDB from "@/lib/mongodb";
 import Note from "@/models/Note";
 import AiUsage from "@/models/AiUsage";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Anthropic from "@anthropic-ai/sdk";
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY || "");
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY!,
+});
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -28,29 +30,51 @@ export async function POST(_req: Request, context: RouteContext) {
       return NextResponse.json({ error: "Note not found" }, { status: 404 });
     }
 
-    const contentToAnalyze = `${note.title}\n\n${note.content}`.trim();
-    if (contentToAnalyze.length < 50) {
+    const content = `${note.title}\n\n${note.content}`.trim();
+    if (content.length < 50) {
       return NextResponse.json(
         { error: "Note content is too short for AI analysis (minimum 50 characters)" },
         { status: 422 }
       );
     }
 
-    // Call Gemini
-    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
-    const prompt = `Analyze this note and respond ONLY with valid JSON (no markdown, no explanation, no code fences) in this exact format: {"summary": "...", "action_items": [...], "suggested_title": "..."}\n\nNote content:\n${contentToAnalyze}`;
-    
-    const result = await model.generateContent(prompt);
-    const rawText = result.response.text();
+    // Call Anthropic Claude
+    const message = await anthropic.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1000,
+      messages: [
+        {
+          role: "user",
+          content: `Analyze this note and respond ONLY with valid JSON 
+          (no markdown fences, no explanation, no extra text) 
+          in this exact format:
+          {
+            "summary": "2-3 sentence summary of the note",
+            "action_items": ["item 1", "item 2", "item 3"],
+            "suggested_title": "A concise title for this note"
+          }
+          
+          Note content:
+          ${content}`
+        }
+      ]
+    });
 
-    // Safely parse JSON — strip any accidental markdown fences
-    const cleaned = rawText.replace(/```json\n?/gi, "").replace(/```\n?/gi, "").trim();
-    let parsed: { summary: string; action_items: string[]; suggested_title: string };
+    const rawText = message.content[0].type === "text" 
+      ? message.content[0].text 
+      : "";
+
+    // Safe JSON parse with fallback
+    let parsed;
     try {
+      const cleaned = rawText.replace(/```json|```/g, "").trim();
       parsed = JSON.parse(cleaned);
-    } catch {
-      console.error("[generate-summary] Failed to parse AI JSON:", cleaned);
-      return NextResponse.json({ error: "AI returned malformed response. Please try again." }, { status: 502 });
+    } catch (err) {
+      console.error("[generate-summary] Claude JSON parse error:", err, rawText);
+      return NextResponse.json(
+        { error: "AI returned invalid response. Please try again." },
+        { status: 500 }
+      );
     }
 
     // Save AI output back to the note

@@ -16,7 +16,8 @@ import {
   Trash2, 
   Globe,
   Eye,
-  Edit3
+  Edit3,
+  Sparkles
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AiPanel } from "@/components/AiPanel";
@@ -68,6 +69,7 @@ export function NoteEditor() {
   const [showCategoryMenu, setShowCategoryMenu] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [isPreview, setIsPreview] = useState(false);
+  const [showAiPanel, setShowAiPanel] = useState(false);
   const [copying, setCopying] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -355,6 +357,15 @@ export function NoteEditor() {
             )}
           </button>
 
+          {/* AI Insights Button */}
+          <button
+            onClick={() => setShowAiPanel(!showAiPanel)}
+            title="Generate AI Insights"
+            className="text-violet-400 hover:text-violet-300 hover:drop-shadow-[0_0_8px_rgba(139,92,246,0.8)] transition-all duration-200 p-2 rounded-lg hover:bg-violet-500/10"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+          </button>
+
           {/* Archive toggle */}
           <button
             onClick={handleArchive}
@@ -440,6 +451,8 @@ export function NoteEditor() {
             initialActionItems={note.actionItems}
             initialSuggestedTitle={note.suggestedTitle}
             onApplyTitle={handleApplyTitle}
+            isOpen={showAiPanel}
+            setIsOpen={setShowAiPanel}
           />
         </div>
       </div>

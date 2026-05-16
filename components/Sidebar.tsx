@@ -86,7 +86,7 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile Header */}
-      <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-zinc-950 border-b border-zinc-800/60 sticky top-0 z-40">
+      <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-[#0f0f1a] border-b border-zinc-800/60 sticky top-0 z-40">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg">
             <LayoutDashboard className="w-4 h-4 text-white" />
@@ -111,7 +111,7 @@ export function Sidebar() {
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 w-[280px] bg-zinc-950 border-r border-zinc-800/60 transition-transform duration-300 lg:relative lg:translate-x-0 flex flex-col h-full",
+        "fixed inset-y-0 left-0 z-50 w-[280px] bg-[#0f0f1a] border-r border-white/10 transition-transform duration-300 lg:relative lg:translate-x-0 flex flex-col h-full",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         {/* Brand & Nav */}

@@ -7,6 +7,11 @@ export interface NoteItem {
   tags: string[];
   category: string;
   isArchived: boolean;
+  isPublic?: boolean;
+  shareId?: string;
+  summary?: string;
+  actionItems?: string[];
+  suggestedTitle?: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -185,15 +185,15 @@ export function NotesList({ hideBrand = false }: { hideBrand?: boolean }) {
               {isLoading ? "Loading..." : `${notes.length} ${notes.length === 1 ? 'note' : 'notes'} found`}
             </p>
           )}
-          <button
-            id="new-note-btn"
-            onClick={() => createMutation.mutate()}
-            disabled={createMutation.isPending}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold transition-all duration-200 disabled:opacity-60 shadow-lg shadow-violet-900/30 active:scale-95"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            New Note
-          </button>
+            <button
+              id="new-note-btn"
+              onClick={() => createMutation.mutate()}
+              disabled={createMutation.isPending}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-lg hover:opacity-90 hover:scale-[1.02] transition-all duration-200 disabled:opacity-60 shadow-lg shadow-violet-900/30 active:scale-95 text-xs font-semibold"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              New Note
+            </button>
         </div>
       </div>
 
@@ -339,10 +339,10 @@ export function NotesList({ hideBrand = false }: { hideBrand?: boolean }) {
               id={`note-item-${note._id}`}
               onClick={() => setSelectedNoteId(note._id)}
               className={cn(
-                "w-full text-left p-3.5 rounded-2xl transition-all duration-200 group relative overflow-hidden border",
+                "w-full text-left p-3.5 transition-all duration-200 group relative overflow-hidden",
                 selectedNoteId === note._id
-                  ? "bg-violet-600/10 border-violet-500/40 shadow-sm shadow-violet-900/10"
-                  : "bg-transparent border-transparent hover:bg-zinc-800/40 hover:border-zinc-800"
+                  ? "bg-gradient-to-r from-violet-500/20 to-purple-600/10 border border-violet-500/30 rounded-xl"
+                  : "bg-transparent border-transparent hover:bg-white/5 rounded-xl transition"
               )}
             >
               {selectedNoteId === note._id && (
@@ -381,9 +381,22 @@ export function NotesList({ hideBrand = false }: { hideBrand?: boolean }) {
                     <span className="text-[9px] font-bold text-zinc-600">+{note.tags.length - 2}</span>
                   )}
                 </div>
-                <div className="flex items-center gap-1.5 text-[10px] text-zinc-600 font-medium shrink-0">
-                  <span className="w-1 h-1 rounded-full bg-zinc-700" />
-                  {formatDistanceToNow(note.updatedAt)}
+                <div className="flex items-center gap-3 mt-auto">
+                  <div className="flex items-center gap-1.5 text-[10px] text-zinc-600 font-medium shrink-0">
+                    <span className="w-1 h-1 rounded-full bg-zinc-700" />
+                    {formatDistanceToNow(note.updatedAt)}
+                  </div>
+                  {note.category && (
+                    <span className={cn(
+                      "rounded-full px-2 py-0.5 text-[10px] font-medium ml-auto",
+                      note.category === "Personal" && "bg-violet-500/20 text-violet-300 border border-violet-500/30",
+                      note.category === "Work" && "bg-blue-500/20 text-blue-300 border border-blue-500/30",
+                      note.category === "Learning" && "bg-green-500/20 text-green-300 border border-green-500/30",
+                      note.category === "Other" && "bg-gray-500/20 text-gray-300 border border-gray-500/30"
+                    )}>
+                      {note.category}
+                    </span>
+                  )}
                 </div>
               </div>
             </button>
