@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 export default function Home() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100-vh-4rem)] text-center px-4">
-      <h1 className="text-5xl font-extrabold tracking-tight sm:text-6xl mb-6">
+      <h1 className="text-5xl font-extrabold tracking-tight sm:text-6xl mb-6 mt-30">
         Note<span className="text-zinc-400">AI</span>
       </h1>
       <p className="text-xl text-zinc-400 max-w-2xl mb-10">
