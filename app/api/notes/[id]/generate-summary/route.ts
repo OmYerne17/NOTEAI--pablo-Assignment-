@@ -4,11 +4,9 @@ import { authOptions } from "@/lib/auth";
 import connectDB from "@/lib/mongodb";
 import Note from "@/models/Note";
 import AiUsage from "@/models/AiUsage";
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY!,
-});
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY!);
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -38,14 +36,9 @@ export async function POST(_req: Request, context: RouteContext) {
       );
     }
 
-    // Call Anthropic Claude
-    const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1000,
-      messages: [
-        {
-          role: "user",
-          content: `Analyze this note and respond ONLY with valid JSON 
+    // Call Google Gemini
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const prompt = `Analyze this note and respond ONLY with valid JSON 
           (no markdown fences, no explanation, no extra text) 
           in this exact format:
           {
@@ -55,14 +48,10 @@ export async function POST(_req: Request, context: RouteContext) {
           }
           
           Note content:
-          ${content}`
-        }
-      ]
-    });
-
-    const rawText = message.content[0].type === "text" 
-      ? message.content[0].text 
-      : "";
+          ${content}`;
+          
+    const result = await model.generateContent(prompt);
+    const rawText = result.response.text();
 
     // Safe JSON parse with fallback
     let parsed;
@@ -70,7 +59,7 @@ export async function POST(_req: Request, context: RouteContext) {
       const cleaned = rawText.replace(/```json|```/g, "").trim();
       parsed = JSON.parse(cleaned);
     } catch (err) {
-      console.error("[generate-summary] Claude JSON parse error:", err, rawText);
+      console.error("[generate-summary] Gemini JSON parse error:", err, rawText);
       return NextResponse.json(
         { error: "AI returned invalid response. Please try again." },
         { status: 500 }
